@@ -11,7 +11,7 @@ pub async fn spawn_wifi_tasks<'a>(spawner: &Spawner, pins: WifiPins) {
     let random_seed = rng.random() as u64 | ((rng.random() as u64) << 32);
     let dhcp_config = DhcpConfig::default();
     let config = embassy_net::Config::dhcpv4(dhcp_config);
-    let resources = &mut *mk_static!(StackResources<24>, StackResources::<24>::new());
+    let resources = &mut *mk_static!(StackResources<24>, StackResources::new());
     let (stack, runner) = embassy_net::new(interfaces.station, config, resources, random_seed);
 
     spawner.spawn(connection_task(controller)).unwrap();
