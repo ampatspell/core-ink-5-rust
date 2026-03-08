@@ -1,12 +1,5 @@
-use defmt::info;
-use embassy_executor::Spawner;
-use embedded_graphics::{
-    Drawable,
-    mono_font::{MonoTextStyle, iso_8859_1::FONT_9X18_BOLD},
-    prelude::*,
-    primitives::{PrimitiveStyle, StyledDrawable},
-    text::Text,
-};
+use crate::display::DisplayPins;
+use embedded_graphics::prelude::*;
 use embedded_hal_bus::spi::{ExclusiveDevice, NoDelay};
 use epd_waveshare::{
     color::Color,
@@ -16,32 +9,13 @@ use epd_waveshare::{
 use esp_hal::{
     Blocking,
     delay::Delay,
-    gpio::{AnyPin, Input, InputConfig, Level, Output, OutputConfig},
-    peripherals::SPI2,
+    gpio::{Input, InputConfig, Level, Output, OutputConfig},
     spi::{
         Mode,
         master::{Config, Spi},
     },
     time::Rate,
 };
-use no_std_strings::{str_format, str16};
-
-use crate::channels::{RANDOM, Random::Button};
-
-pub struct DisplayPins {
-    pub busy: AnyPin<'static>,
-    pub rst: AnyPin<'static>,
-    pub dc: AnyPin<'static>,
-    pub cs: AnyPin<'static>,
-    pub sck: AnyPin<'static>,
-    pub mosi: AnyPin<'static>,
-    pub miso: AnyPin<'static>,
-    pub spi: SPI2<'static>,
-}
-
-pub fn spawn_display_task(spawner: &Spawner, pins: DisplayPins) {
-    spawner.spawn(display_task(pins)).unwrap();
-}
 
 pub struct Display {
     driver: Epd1in54<
@@ -97,16 +71,6 @@ impl Display {
             .unwrap();
     }
 
-    pub fn set_background_color(&mut self, color: Color) {
-        self.driver.set_background_color(color);
-    }
-
-    pub fn clear_frame(&mut self) {
-        self.driver
-            .clear_frame(&mut self.spi, &mut self.delay)
-            .unwrap();
-    }
-
     pub fn update_frame(&mut self) {
         self.driver
             .update_frame(&mut self.spi, &self.display.buffer(), &mut self.delay)
@@ -117,6 +81,11 @@ impl Display {
         self.driver
             .display_frame(&mut self.spi, &mut self.delay)
             .unwrap();
+    }
+
+    pub fn update_and_display(&mut self) {
+        self.update_frame();
+        self.display_frame();
     }
 }
 
@@ -135,45 +104,5 @@ impl DrawTarget for Display {
 impl Dimensions for Display {
     fn bounding_box(&self) -> embedded_graphics::primitives::Rectangle {
         self.display.bounding_box()
-    }
-}
-
-#[embassy_executor::task]
-async fn display_task(pins: DisplayPins) {
-    info!("display_task");
-
-    let mut display = Display::new(pins);
-
-    let clear = |display: &mut Display| {
-        let style = PrimitiveStyle::with_fill(Color::White);
-        display.bounding_box().draw_styled(&style, display);
-    };
-
-    display.set_lut(RefreshLut::Full);
-    clear(&mut display);
-    display.update_frame();
-    display.display_frame();
-    display.set_lut(RefreshLut::Quick);
-
-    let style = MonoTextStyle::new(&FONT_9X18_BOLD, Color::Black);
-    let mut label = str16::from("CoreInk M5");
-
-    loop {
-        clear(&mut display);
-
-        Text::new(label.to_str(), Point::new(20, 30), style)
-            .draw(&mut display)
-            .unwrap();
-
-        display.update_frame();
-        display.display_frame();
-
-        let message = RANDOM.receive().await;
-        match message {
-            Button { button, on } => {
-                label = str_format!(str16, "{:?} {}", button, on);
-                info!("{}", label.to_str());
-            }
-        }
     }
 }

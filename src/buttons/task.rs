@@ -1,31 +1,14 @@
 use defmt::{Format, info};
-use embassy_executor::Spawner;
 use embassy_futures::select::select4;
 use esp_hal::gpio::{AnyPin, Input, InputConfig};
 
-use crate::channels::{RANDOM, Random};
-
-pub struct ButtonPins {
-    pub up: AnyPin<'static>,
-    pub middle: AnyPin<'static>,
-    pub down: AnyPin<'static>,
-    pub user: AnyPin<'static>,
-}
-
-#[derive(Format, Clone, Debug)]
-pub enum Button {
-    Up,
-    Down,
-    Middle,
-    User,
-}
-
-pub fn spawn_buttons_task(spawner: &Spawner, pins: ButtonPins) {
-    spawner.spawn(buttons_task(pins)).unwrap();
-}
+use crate::{
+    buttons::{Button, ButtonPins},
+    channels::{RANDOM, Random},
+};
 
 #[embassy_executor::task]
-async fn buttons_task(pins: ButtonPins) {
+pub async fn buttons_task(pins: ButtonPins) {
     info!("buttons_task");
 
     let mut up = ButtonPinHandler::new(Button::Up, pins.up);

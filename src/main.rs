@@ -8,10 +8,8 @@
 #![deny(clippy::large_stack_frames)]
 
 use core::future;
-use core_ink_5::{
-    buttons::{ButtonPins, spawn_buttons_task},
-    display::{DisplayPins, spawn_display_task},
-};
+use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
+use core_ink_5::display::{DisplayPins, spawn_display_task};
 use embassy_executor::Spawner;
 use esp_hal::interrupt::software::SoftwareInterruptControl;
 use esp_hal::timer::timg::TimerGroup;
