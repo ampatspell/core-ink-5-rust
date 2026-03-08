@@ -1,25 +1,18 @@
-use crate::wifi::WifiPins;
+use crate::{mk_static, wifi::WifiPins};
 use defmt::info;
 use embassy_executor::Spawner;
 use embassy_net::{DhcpConfig, StackResources};
 use esp_hal::rng::Rng;
 use esp_radio::wifi::WifiController;
-use static_cell::StaticCell;
 
 pub async fn spawn_wifi_tasks<'a>(spawner: &Spawner, pins: WifiPins) {
     let (controller, interfaces) = esp_radio::wifi::new(pins.wifi, Default::default()).unwrap();
     let rng = Rng::new();
-    let net_seed = rng.random() as u64 | ((rng.random() as u64) << 32);
+    let random_seed = rng.random() as u64 | ((rng.random() as u64) << 32);
     let dhcp_config = DhcpConfig::default();
-
     let config = embassy_net::Config::dhcpv4(dhcp_config);
-    let resources = {
-        // max sockets
-        static CELL: StaticCell<StackResources<24>> = StaticCell::new();
-        CELL.init(StackResources::<24>::new())
-    };
-
-    let (stack, runner) = embassy_net::new(interfaces.station, config, resources, net_seed);
+    let resources = &mut *mk_static!(StackResources<24>, StackResources::<24>::new());
+    let (stack, runner) = embassy_net::new(interfaces.station, config, resources, random_seed);
 
     spawner.spawn(connection_task(controller)).unwrap();
     // spawner.spawn(wifi_task(runner)).ok();
