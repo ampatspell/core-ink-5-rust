@@ -64,14 +64,14 @@ async fn main(spawner: Spawner) -> ! {
     );
 
     let mut led = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
-    let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
+    // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
 
     loop {
         Timer::after(Duration::from_secs(60 * 60)).await;
         led.set_low();
-        buzzer.set_low();
+        // buzzer.set_low();
         Timer::after(Duration::from_millis(500)).await;
         led.set_high();
-        buzzer.set_high();
+        // buzzer.set_high();
     }
 }
