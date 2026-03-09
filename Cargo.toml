@@ -15,7 +15,7 @@ esp-bootloader-esp-idf = { version = "^0.4.0", git = "https://github.com/esp-rs/
 esp-alloc = { version = "0.9.0", git = "https://github.com/esp-rs/esp-hal.git", rev = "ad5b127", features = ["defmt"] }
 esp-backtrace = { version = "0.18.1", git = "https://github.com/esp-rs/esp-hal.git", rev = "ad5b127", features = ["defmt", "esp32", "panic-handler"] }
 esp-println = { version = "0.16.1", git = "https://github.com/esp-rs/esp-hal.git", rev = "ad5b127", features = ["defmt-espflash", "esp32"] }
-esp-radio = { version = "0.17.0", git = "https://github.com/esp-rs/esp-hal.git", rev = "ad5b127", features = ["defmt", "esp-alloc", "esp32", "unstable", "wifi"] }
+esp-radio = { version = "0.17.0", git = "https://github.com/esp-rs/esp-hal.git", rev = "ad5b127", features = ["defmt", "esp-alloc", "esp32", "unstable", "coex", "wifi", "ble"] }
 defmt = "1.0.1"
 embassy-executor = { version = "0.9.1", features = ["defmt"] }
 embassy-time = { version = "0.5.0", features = ["defmt"] }
@@ -33,6 +33,9 @@ smoltcp = { version = "0.12.0", default-features = false, features = ["defmt", "
 
 [profile.dev]
 opt-level = "s"
+
+[profile.dev.package.esp-wifi]
+opt-level = 3
 
 [profile.release]
 codegen-units    = 1

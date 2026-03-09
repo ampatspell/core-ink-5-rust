@@ -1,7 +1,7 @@
 use defmt::info;
 use embedded_graphics::{
     Drawable,
-    mono_font::{MonoTextStyle, iso_8859_1::FONT_9X18_BOLD},
+    mono_font::{MonoTextStyle, iso_8859_5::FONT_10X20},
     prelude::*,
     primitives::{PrimitiveStyle, StyledDrawable},
     text::Text,
@@ -10,13 +10,16 @@ use epd_waveshare::{color::Color, prelude::RefreshLut};
 use no_std_strings::{str_format, str16};
 
 use crate::{
-    channels::{RANDOM, Random::Button},
+    channels::{
+        RANDOM,
+        Random::{self},
+    },
     display::{DisplayPins, display::Display},
 };
 
 #[embassy_executor::task]
 pub async fn display_task(pins: DisplayPins) {
-    info!("display_task");
+    info!("start display_task");
 
     let mut display = Display::new(pins);
 
@@ -27,11 +30,13 @@ pub async fn display_task(pins: DisplayPins) {
 
     display.set_lut(RefreshLut::Full);
     clear(&mut display);
+
+    let style = MonoTextStyle::new(&FONT_10X20, Color::Black);
+    let mut label = str16::from("CoreInk M5");
+    let mut ip = str16::from("No IP");
+
     display.update_and_display();
     display.set_lut(RefreshLut::Quick);
-
-    let style = MonoTextStyle::new(&FONT_9X18_BOLD, Color::Black);
-    let mut label = str16::from("CoreInk M5");
 
     loop {
         clear(&mut display);
@@ -39,15 +44,21 @@ pub async fn display_task(pins: DisplayPins) {
         Text::new(label.to_str(), Point::new(20, 30), style)
             .draw(&mut display)
             .unwrap();
+        Text::new(ip.to_str(), Point::new(20, 50), style)
+            .draw(&mut display)
+            .unwrap();
 
         display.update_and_display();
 
         let message = RANDOM.receive().await;
         match message {
-            Button { button, on } => {
+            Random::Button { button, on } => {
                 label = str_format!(str16, "{:?} {}", button, on);
-                info!("{}", label.to_str());
             }
+            Random::IP { value } => match value {
+                Some(value) => ip = value,
+                None => ip = str16::from("No IP"),
+            },
         }
     }
 }
