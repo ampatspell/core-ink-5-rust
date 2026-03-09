@@ -11,6 +11,7 @@ use core::future;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
 use embassy_executor::Spawner;
+use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::interrupt::software::SoftwareInterruptControl;
 use esp_hal::timer::timg::TimerGroup;
 use esp_hal::{clock::CpuClock, gpio::Pin};
@@ -32,6 +33,11 @@ async fn main(spawner: Spawner) -> ! {
     let timg0 = TimerGroup::new(peripherals.TIMG0);
     let software_interrupt = SoftwareInterruptControl::new(peripherals.SW_INTERRUPT);
     esp_rtos::start(timg0.timer0, software_interrupt.software_interrupt0);
+
+    {
+        let mut pc = Output::new(peripherals.GPIO12, Level::High, OutputConfig::default());
+        pc.set_high();
+    }
 
     spawn_display_task(
         &spawner,
