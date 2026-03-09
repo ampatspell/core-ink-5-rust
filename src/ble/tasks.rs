@@ -1,13 +1,13 @@
+use crate::ble::BlePins;
 use core::cell::RefCell;
-
 use defmt::info;
 use embassy_executor::Spawner;
+use embassy_futures::join::join;
+use embassy_time::{Duration, Timer};
 use esp_radio::ble::controller::BleConnector;
 use heapless::Deque;
 use trouble_host::prelude::*;
 use trouble_host::{Address, Host, HostResources};
-
-use crate::ble::BlePins;
 
 pub fn spawn_ble_tasks<'a>(spawner: &Spawner, pins: BlePins) {
     let connector = BleConnector::new(pins.bt, Default::default()).unwrap();
@@ -39,6 +39,18 @@ async fn scanner_task(controller: ExternalController<BleConnector<'static>, 20>)
     };
 
     let mut scanner = Scanner::new(central);
+    let _ = join(runner.run_with_handler(&printer), async {
+        let mut config = ScanConfig::default();
+        config.active = true;
+        config.phys = PhySet::M1;
+        config.interval = Duration::from_secs(1);
+        config.window = Duration::from_secs(1);
+        let mut _session = scanner.scan(&config).await.unwrap();
+        loop {
+            Timer::after(Duration::from_secs(1)).await;
+        }
+    })
+    .await;
 }
 
 struct Printer {
@@ -50,7 +62,7 @@ impl EventHandler for Printer {
         let mut seen = self.seen.borrow_mut();
         while let Some(Ok(report)) = it.next() {
             if seen.iter().find(|b| b.raw() == report.addr.raw()).is_none() {
-                info!("discovered: {:?}", report.addr);
+                info!("ble discovered: {:?}", report.addr);
                 if seen.is_full() {
                     seen.pop_front();
                 }
