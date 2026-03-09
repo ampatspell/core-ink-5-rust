@@ -7,10 +7,12 @@
 )]
 #![deny(clippy::large_stack_frames)]
 
-use core::future;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
+use core_ink_5::wifi::WifiPins;
+use core_ink_5::wifi::wifi::spawn_wifi_tasks;
 use embassy_executor::Spawner;
+use embassy_time::{Duration, Timer};
 use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::interrupt::software::SoftwareInterruptControl;
 use esp_hal::timer::timg::TimerGroup;
@@ -63,5 +65,22 @@ async fn main(spawner: Spawner) -> ! {
         },
     );
 
-    future::pending().await
+    spawn_wifi_tasks(
+        &spawner,
+        WifiPins {
+            wifi: peripherals.WIFI,
+        },
+    );
+
+    let mut led = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
+    // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
+
+    loop {
+        Timer::after(Duration::from_secs(3)).await;
+        led.set_low();
+        // buzzer.set_low();
+        Timer::after(Duration::from_millis(500)).await;
+        led.set_high();
+        // buzzer.set_high();
+    }
 }

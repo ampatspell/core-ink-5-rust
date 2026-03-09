@@ -9,7 +9,7 @@ use crate::{
 
 #[embassy_executor::task]
 pub async fn buttons_task(pins: ButtonPins) {
-    info!("buttons_task");
+    info!("start buttons_task");
 
     let mut up = ButtonPinHandler::new(Button::Up, pins.up);
     let mut down = ButtonPinHandler::new(Button::Down, pins.down);
