@@ -42,17 +42,23 @@ pub async fn display_task(pins: DisplayPins) {
 
     loop {
         clear(&mut display);
+        let x = 10;
+        let mut y = 25;
+        let ys = 20;
 
-        Text::new(button.to_str(), Point::new(20, 30), style)
+        Text::new(button.to_str(), Point::new(x, y), style)
             .draw(&mut display)
             .unwrap();
-        Text::new(now.to_str(), Point::new(20, 50), style)
+        y = y + ys;
+        Text::new(now.to_str(), Point::new(x, y), style)
             .draw(&mut display)
             .unwrap();
-        Text::new(ip.to_str(), Point::new(20, 70), style)
+        y = y + ys;
+        Text::new(ip.to_str(), Point::new(x, y), style)
             .draw(&mut display)
             .unwrap();
-        Text::new(ble.to_str(), Point::new(20, 90), style)
+        y = y + ys;
+        Text::new(ble.to_str(), Point::new(x, y), style)
             .draw(&mut display)
             .unwrap();
 
