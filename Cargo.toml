@@ -28,7 +28,7 @@ epd-waveshare = { version = "0.6.0", features = ["graphics"] }
 embedded-graphics = "0.8.2"
 embedded-hal-bus = { version = "0.1" }
 no_std_strings = "0.1.3"
-reqwless = { version = "0.14.0", default-features = false, features = ["log"] }
+reqwless = { version = "0.14.0", default-features = false, features = ["defmt"] }
 smoltcp = { version = "0.12.0", default-features = false, features = ["defmt", "medium-ethernet", "multicast", "proto-dhcpv4", "proto-dns", "proto-ipv4", "socket-dns", "socket-icmp", "socket-raw", "socket-tcp", "socket-udp"] }
 
 [profile.dev]

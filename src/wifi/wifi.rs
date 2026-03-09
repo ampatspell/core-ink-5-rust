@@ -2,7 +2,7 @@ use crate::{
     channels::RANDOM,
     constants::{WIFI_PASSWORD, WIFI_SSID},
     mk_static,
-    wifi::WifiPins,
+    wifi::{WifiPins, http::http_get},
 };
 use defmt::info;
 use embassy_executor::Spawner;
@@ -21,11 +21,12 @@ pub fn spawn_wifi_tasks<'a>(spawner: &Spawner, pins: WifiPins) {
     let resources = &mut *mk_static!(StackResources<24>, StackResources::new());
     let (stack, runner) = embassy_net::new(interfaces.station, config, resources, random_seed);
 
-    spawner.spawn(connection_task(controller)).ok();
-    spawner.spawn(runner_task(runner)).ok();
+    spawner.spawn(connection_task(controller)).unwrap();
+    spawner.spawn(runner_task(runner)).unwrap();
 
     let _stack = mk_static!(Stack, stack);
-    spawner.spawn(connection_status_task(_stack)).ok();
+    spawner.spawn(connection_status_task(_stack)).unwrap();
+    spawner.spawn(periodic_request_task(_stack)).unwrap();
 }
 
 #[embassy_executor::task]
@@ -86,5 +87,18 @@ async fn connection_task(mut controller: WifiController<'static>) {
                 Timer::after(Duration::from_secs(5)).await
             }
         }
+    }
+}
+
+#[embassy_executor::task]
+async fn periodic_request_task(stack: &'static Stack<'static>) {
+    loop {
+        stack.wait_config_up().await;
+        let res = http_get(stack, "http://timetable.app.amateurinmotion.com/now").await;
+        match res {
+            Ok(_) => info!("HTTP ok"),
+            Err(_) => info!("HTTP error"),
+        }
+        Timer::after(Duration::from_secs(60)).await;
     }
 }
