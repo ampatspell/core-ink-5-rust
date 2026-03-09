@@ -1,4 +1,5 @@
 use crate::ble::BlePins;
+use crate::channels::{RANDOM, Random};
 use core::cell::RefCell;
 use defmt::info;
 use embassy_executor::Spawner;
@@ -67,6 +68,7 @@ impl EventHandler for Printer {
                     seen.pop_front();
                 }
                 seen.push_back(report.addr).unwrap();
+                RANDOM.try_send(Random::BLE { total: seen.len() }).ok();
             }
         }
     }
