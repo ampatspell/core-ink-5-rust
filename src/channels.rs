@@ -9,4 +9,4 @@ pub enum Random {
     Time { current: str16 },
 }
 
-pub static RANDOM: Channel<CriticalSectionRawMutex, Random, 1> = Channel::new();
+pub static RANDOM: Channel<CriticalSectionRawMutex, Random, 5> = Channel::new();

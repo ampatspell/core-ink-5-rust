@@ -33,8 +33,8 @@ pub async fn display_task(pins: DisplayPins) {
 
     let style = MonoTextStyle::new(&FONT_10X20, Color::Black);
     let mut button = str16::from("CoreInk M5");
-    let mut now = str16::from("Now");
-    let mut ip = str16::from("No IP");
+    let mut now = str16::from("-");
+    let mut ip = str16::from("IP: _");
     let mut ble = str16::from("BLE: -");
 
     display.update_and_display();
@@ -42,7 +42,7 @@ pub async fn display_task(pins: DisplayPins) {
 
     loop {
         clear(&mut display);
-        let x = 10;
+        let x = 15;
         let mut y = 25;
         let ys = 20;
 
@@ -73,8 +73,8 @@ pub async fn display_task(pins: DisplayPins) {
                 button = str_format!(str16, "{:?} {}", _button, on);
             }
             Random::IP { value } => match value {
-                Some(value) => ip = value,
-                None => ip = str16::from("No IP"),
+                Some(value) => ip = str_format!(str16, "BLE: {}", value),
+                None => ip = str16::from("IP: -"),
             },
             Random::BLE { total } => {
                 ble = str_format!(str16, "BLE: {}", total);
