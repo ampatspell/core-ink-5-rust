@@ -36,15 +36,7 @@ async fn connection_status_task(stack: &'static Stack<'static>) {
         stack.wait_config_up().await;
         if let Some(config) = stack.config_v4() {
             info!("Got IP: {}", config.address);
-            let octets = config.address.address().octets();
-            let value = str_format!(
-                str16,
-                "{}.{}.{}.{}",
-                octets[0],
-                octets[1],
-                octets[2],
-                octets[3]
-            );
+            let value = str_format!(str16, "{}", config.address);
             RANDOM
                 .send(crate::channels::Random::IP { value: Some(value) })
                 .await;

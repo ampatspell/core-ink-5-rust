@@ -1,13 +1,13 @@
 use defmt::info;
 use embedded_graphics::{
     Drawable,
-    mono_font::{MonoTextStyle, iso_8859_5::FONT_10X20},
+    mono_font::{MonoTextStyle, iso_8859_5::FONT_9X18_BOLD},
     prelude::*,
     primitives::{PrimitiveStyle, StyledDrawable},
     text::Text,
 };
 use epd_waveshare::{color::Color, prelude::RefreshLut};
-use no_std_strings::{str_format, str16};
+use no_std_strings::{str_format, str16, str32};
 
 use crate::{
     channels::{
@@ -31,10 +31,10 @@ pub async fn display_task(pins: DisplayPins) {
     display.set_lut(RefreshLut::Full);
     clear(&mut display);
 
-    let style = MonoTextStyle::new(&FONT_10X20, Color::Black);
+    let style = MonoTextStyle::new(&FONT_9X18_BOLD, Color::Black);
     let mut button = str16::from("CoreInk M5");
     let mut now = str16::from("-");
-    let mut ip = str16::from("IP: _");
+    let mut ip = str32::from("IP: _");
     let mut ble = str16::from("BLE: -");
 
     display.update_and_display();
@@ -42,7 +42,7 @@ pub async fn display_task(pins: DisplayPins) {
 
     loop {
         clear(&mut display);
-        let x = 15;
+        let x = 10;
         let mut y = 25;
         let ys = 20;
 
@@ -73,8 +73,8 @@ pub async fn display_task(pins: DisplayPins) {
                 button = str_format!(str16, "{:?} {}", _button, on);
             }
             Random::IP { value } => match value {
-                Some(value) => ip = str_format!(str16, "BLE: {}", value),
-                None => ip = str16::from("IP: -"),
+                Some(value) => ip = str_format!(str32, "IP: {}", value),
+                None => ip = str32::from("IP: -"),
             },
             Random::BLE { total } => {
                 ble = str_format!(str16, "BLE: {}", total);
