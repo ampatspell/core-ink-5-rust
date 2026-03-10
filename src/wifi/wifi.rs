@@ -10,7 +10,7 @@ use embassy_net::{DhcpConfig, Runner, Stack, StackResources};
 use embassy_time::{Duration, Timer};
 use esp_hal::rng::Rng;
 use esp_radio::wifi::{Config, Interface, WifiController, sta::StationConfig};
-use no_std_strings::{str_format, str16, str256};
+use no_std_strings::{str_format, str16, str32, str256};
 
 pub fn spawn_wifi_tasks<'a>(spawner: &Spawner, pins: WifiPins) {
     let (controller, interfaces) = esp_radio::wifi::new(pins.wifi, Default::default()).unwrap();
@@ -36,7 +36,7 @@ async fn connection_status_task(stack: &'static Stack<'static>) {
         stack.wait_config_up().await;
         if let Some(config) = stack.config_v4() {
             info!("Got IP: {}", config.address);
-            let value = str_format!(str16, "{}", config.address);
+            let value = str_format!(str32, "{}", config.address);
             RANDOM
                 .send(crate::channels::Random::IP { value: Some(value) })
                 .await;
