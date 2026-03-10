@@ -80,10 +80,10 @@ async fn main(spawner: Spawner) -> ! {
     // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
 
     loop {
-        Timer::after(Duration::from_secs(3)).await;
+        Timer::after(Duration::from_secs(2)).await;
         led.set_low();
         // buzzer.set_low();
-        Timer::after(Duration::from_millis(500)).await;
+        Timer::after(Duration::from_millis(100)).await;
         led.set_high();
         // buzzer.set_high();
     }

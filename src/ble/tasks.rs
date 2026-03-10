@@ -55,7 +55,7 @@ async fn scanner_task(controller: ExternalController<BleConnector<'static>, 20>)
 }
 
 struct Printer {
-    seen: RefCell<Deque<BdAddr, 128>>,
+    seen: RefCell<Deque<BdAddr, 1024>>,
 }
 
 impl EventHandler for Printer {
