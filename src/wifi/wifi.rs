@@ -1,5 +1,5 @@
 use crate::{
-    channels::RANDOM,
+    channels::{RANDOM, Random},
     constants::{WIFI_PASSWORD, WIFI_SSID},
     mk_static,
     wifi::{WifiPins, http::http_get},
@@ -10,7 +10,7 @@ use embassy_net::{DhcpConfig, Runner, Stack, StackResources};
 use embassy_time::{Duration, Timer};
 use esp_hal::rng::Rng;
 use esp_radio::wifi::{Config, Interface, WifiController, sta::StationConfig};
-use no_std_strings::{str_format, str16};
+use no_std_strings::{str_format, str16, str256};
 
 pub fn spawn_wifi_tasks<'a>(spawner: &Spawner, pins: WifiPins) {
     let (controller, interfaces) = esp_radio::wifi::new(pins.wifi, Default::default()).unwrap();
@@ -90,15 +90,31 @@ async fn connection_task(mut controller: WifiController<'static>) {
     }
 }
 
+fn parse_time(body: &str256) -> str16 {
+    let mut iter = body.split("\n").into_iter();
+    let res = str_format!(
+        str16,
+        "{}:{}:{}",
+        iter.next().unwrap(),
+        iter.next().unwrap(),
+        iter.next().unwrap()
+    );
+
+    res
+}
+
 #[embassy_executor::task]
 async fn periodic_request_task(stack: &'static Stack<'static>) {
     loop {
         stack.wait_config_up().await;
         let res = http_get(stack, "http://timetable.app.amateurinmotion.com/now").await;
         match res {
-            Ok(_) => info!("HTTP ok"),
+            Ok(resp) => {
+                let current = parse_time(&resp);
+                RANDOM.send(Random::Time { current }).await;
+            }
             Err(_) => info!("HTTP error"),
         }
-        Timer::after(Duration::from_secs(60)).await;
+        Timer::after(Duration::from_secs(15)).await;
     }
 }

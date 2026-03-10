@@ -7,6 +7,8 @@
 )]
 #![deny(clippy::large_stack_frames)]
 
+use core_ink_5::ble::BlePins;
+use core_ink_5::ble::tasks::spawn_ble_tasks;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
 use core_ink_5::wifi::WifiPins;
@@ -71,6 +73,8 @@ async fn main(spawner: Spawner) -> ! {
             wifi: peripherals.WIFI,
         },
     );
+
+    spawn_ble_tasks(&spawner, BlePins { bt: peripherals.BT });
 
     let mut led = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
     // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
