@@ -63,10 +63,10 @@ pub fn spawn_storage_task(_spawner: &Spawner, pins: StoragePins) {
     match fs {
         Ok(fs) => {
             info!("Has fs");
+            fs.write_file("/hello", "Hello".as_bytes());
             let opened = fs
                 .open("/hello", OpenFlags::WRITE | OpenFlags::READ)
                 .unwrap();
-            opened.write("Hello".as_bytes()).unwrap();
 
             let mut buf: [u8; 32] = [0; 32];
             opened.read(&mut buf).unwrap();
