@@ -11,6 +11,7 @@ use core_ink_5::ble::BlePins;
 use core_ink_5::ble::tasks::spawn_ble_tasks;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
+use core_ink_5::storage::{StoragePins, spawn_storage_task};
 use core_ink_5::wifi::WifiPins;
 use core_ink_5::wifi::wifi::spawn_wifi_tasks;
 use embassy_executor::Spawner;
@@ -57,24 +58,31 @@ async fn main(spawner: Spawner) -> ! {
         },
     );
 
-    spawn_buttons_task(
+    spawn_storage_task(
         &spawner,
-        ButtonPins {
-            up: peripherals.GPIO37.degrade(),
-            down: peripherals.GPIO39.degrade(),
-            middle: peripherals.GPIO38.degrade(),
-            user: peripherals.GPIO5.degrade(),
+        StoragePins {
+            flash: peripherals.FLASH,
         },
     );
 
-    spawn_wifi_tasks(
-        &spawner,
-        WifiPins {
-            wifi: peripherals.WIFI,
-        },
-    );
+    // spawn_buttons_task(
+    //     &spawner,
+    //     ButtonPins {
+    //         up: peripherals.GPIO37.degrade(),
+    //         down: peripherals.GPIO39.degrade(),
+    //         middle: peripherals.GPIO38.degrade(),
+    //         user: peripherals.GPIO5.degrade(),
+    //     },
+    // );
 
-    spawn_ble_tasks(&spawner, BlePins { bt: peripherals.BT });
+    // spawn_wifi_tasks(
+    //     &spawner,
+    //     WifiPins {
+    //         wifi: peripherals.WIFI,
+    //     },
+    // );
+
+    // spawn_ble_tasks(&spawner, BlePins { bt: peripherals.BT });
 
     let mut led = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
     // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
