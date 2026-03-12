@@ -11,6 +11,7 @@ use core_ink_5::ble::BlePins;
 use core_ink_5::ble::tasks::spawn_ble_tasks;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
+use core_ink_5::storage::{create_filesystem, read_write_filesystem};
 use core_ink_5::wifi::WifiPins;
 use core_ink_5::wifi::wifi::spawn_wifi_tasks;
 use embassy_executor::Spawner;
@@ -57,6 +58,9 @@ async fn main(spawner: Spawner) -> ! {
         },
     );
 
+    let fs = create_filesystem();
+    read_write_filesystem(&fs);
+
     spawn_buttons_task(
         &spawner,
         ButtonPins {
@@ -83,7 +87,7 @@ async fn main(spawner: Spawner) -> ! {
         Timer::after(Duration::from_secs(2)).await;
         led.set_low();
         // buzzer.set_low();
-        Timer::after(Duration::from_millis(100)).await;
+        Timer::after(Duration::from_millis(50)).await;
         led.set_high();
         // buzzer.set_high();
     }
