@@ -11,7 +11,7 @@ use core_ink_5::ble::BlePins;
 use core_ink_5::ble::tasks::spawn_ble_tasks;
 use core_ink_5::buttons::{ButtonPins, spawn_buttons_task};
 use core_ink_5::display::{DisplayPins, spawn_display_task};
-use core_ink_5::storage::{StoragePins, spawn_storage_task};
+use core_ink_5::storage::{create_filesystem, read_write_filesystem};
 use core_ink_5::wifi::WifiPins;
 use core_ink_5::wifi::wifi::spawn_wifi_tasks;
 use embassy_executor::Spawner;
@@ -58,31 +58,27 @@ async fn main(spawner: Spawner) -> ! {
         },
     );
 
-    spawn_storage_task(
+    let fs = create_filesystem();
+    read_write_filesystem(&fs);
+
+    spawn_buttons_task(
         &spawner,
-        StoragePins {
-            flash: peripherals.FLASH,
+        ButtonPins {
+            up: peripherals.GPIO37.degrade(),
+            down: peripherals.GPIO39.degrade(),
+            middle: peripherals.GPIO38.degrade(),
+            user: peripherals.GPIO5.degrade(),
         },
     );
 
-    // spawn_buttons_task(
-    //     &spawner,
-    //     ButtonPins {
-    //         up: peripherals.GPIO37.degrade(),
-    //         down: peripherals.GPIO39.degrade(),
-    //         middle: peripherals.GPIO38.degrade(),
-    //         user: peripherals.GPIO5.degrade(),
-    //     },
-    // );
+    spawn_wifi_tasks(
+        &spawner,
+        WifiPins {
+            wifi: peripherals.WIFI,
+        },
+    );
 
-    // spawn_wifi_tasks(
-    //     &spawner,
-    //     WifiPins {
-    //         wifi: peripherals.WIFI,
-    //     },
-    // );
-
-    // spawn_ble_tasks(&spawner, BlePins { bt: peripherals.BT });
+    spawn_ble_tasks(&spawner, BlePins { bt: peripherals.BT });
 
     let mut led = Output::new(peripherals.GPIO10, Level::Low, OutputConfig::default());
     // let mut buzzer = Output::new(peripherals.GPIO2, Level::Low, OutputConfig::default());
@@ -91,7 +87,7 @@ async fn main(spawner: Spawner) -> ! {
         Timer::after(Duration::from_secs(2)).await;
         led.set_low();
         // buzzer.set_low();
-        Timer::after(Duration::from_millis(100)).await;
+        Timer::after(Duration::from_millis(50)).await;
         led.set_high();
         // buzzer.set_high();
     }

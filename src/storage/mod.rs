@@ -1,12 +1,9 @@
 use defmt::info;
-use embassy_executor::Spawner;
 use embedded_storage::{ReadStorage, nor_flash::NorFlash};
-use esp_hal::peripherals::FLASH;
 use esp_storage::FlashStorage;
-use heapless::String;
 use littlefs_rust::{Config, Error, Filesystem, OpenFlags, Storage};
-use no_std_strings::{str32, str64};
 
+#[derive(Debug)]
 pub struct EspStorageFlash {
     storage: FlashStorage,
     block_size: u32,
@@ -53,31 +50,52 @@ impl Storage for EspStorageFlash {
     }
 }
 
-pub fn spawn_storage_task(_spawner: &Spawner, pins: StoragePins) {
-    // spawner.spawn(flash_task(pins)).unwrap();
+pub type EspStorageFilesystem = Filesystem<EspStorageFlash>;
 
-    let config = Config::new(4096, 1024); // 4MB
-    let mut storage = EspStorageFlash::new(config.block_size);
-    Filesystem::format(&mut storage, &config).unwrap();
-    let fs = Filesystem::mount(storage, config);
-    match fs {
+static BLOCK_SIZE: u32 = 4096;
+
+pub fn create_filesystem() -> EspStorageFilesystem {
+    let config = || Config::new(BLOCK_SIZE, 1024); // 4MB
+    let storage = || EspStorageFlash::new(BLOCK_SIZE);
+
+    // butcher magic "littlefs" to get Error::Corrupt
+    // let data: [u8; BLOCK_SIZE as usize] = [0; BLOCK_SIZE as usize];
+    // storage().write(0, 0, &data).unwrap();
+
+    let fs = Filesystem::mount(storage(), config());
+    let fs = match fs {
         Ok(fs) => {
-            info!("Has fs");
-            fs.write_file("/hello", "Hello".as_bytes());
-            let opened = fs
-                .open("/hello", OpenFlags::WRITE | OpenFlags::READ)
-                .unwrap();
-
-            let mut buf: [u8; 32] = [0; 32];
-            opened.read(&mut buf).unwrap();
-            info!("read {:?}", buf);
+            info!("Filesystem mounted");
+            fs
         }
-        Err((err, _)) => {
-            info!("Failed to mount");
+        Err(_) => {
+            info!("Failed to mount filesystem");
+            let mut storage = storage();
+            let config = config();
+            Filesystem::format(&mut storage, &config).unwrap();
+            info!("Formatted");
+            let fs = Filesystem::mount(storage, config).unwrap();
+            info!("Mounted after format");
+            fs
         }
     };
+
+    fs
 }
 
-pub struct StoragePins {
-    pub flash: FLASH<'static>,
+pub fn read_write_filesystem(fs: &EspStorageFilesystem) {
+    let file = fs.open("/hello", OpenFlags::READ);
+    match file {
+        Ok(file) => {
+            info!("File exists");
+            let mut buf: [u8; 8] = [0; 8];
+            file.read(&mut buf).unwrap();
+            info!("Bytes {}", buf);
+        }
+        Err(_) => {
+            info!("File open error");
+            fs.write_file("/hello", b"Hello").unwrap();
+            info!("Wrote /hello");
+        }
+    }
 }

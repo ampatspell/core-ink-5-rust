@@ -15,6 +15,7 @@
     "codegen",
     "defmt",
     "heapless",
+    "littlefs",
     "mosi",
     "println",
     "reqwless",
