@@ -64,16 +64,11 @@ pub fn create_filesystem() -> EspStorageFilesystem {
 
     let fs = Filesystem::mount(storage(), config());
     let fs = match fs {
-        Ok(fs) => {
-            info!("Filesystem mounted");
-            fs
-        }
+        Ok(fs) => fs,
         Err(_) => {
-            info!("Failed to mount filesystem");
             let mut storage = storage();
             let config = config();
             Filesystem::format(&mut storage, &config).unwrap();
-            info!("Formatted");
             let fs = Filesystem::mount(storage, config).unwrap();
             info!("Mounted after format");
             fs
